@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>四川麻将计分器</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a5f2a 0%, #0d3d1a 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 10px;
+        }
+        .header { text-align: center; padding: 10px 0; }
+        .header h1 { font-size: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+
+        /* 分数显示 */
+        .players-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .player-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 8px 5px;
+            text-align: center;
+            border: 2px solid transparent;
+            position: relative;
+        }
+        .player-card.receiver { border-color: #4CAF50; background: rgba(76,175,80,0.2); }
+        .player-card.payer { border-color: #ff4444; background: rgba(255,68,68,0.15); }
+        .player-name {
+            font-size: 11px;
+            margin-bottom: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+        }
+        .player-score { font-size: 22px; font-weight: bold; color: #ffd700; }
+        .player-tag {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .tag-receiver { background: #4CAF50; }
+        .tag-payer { background: #ff4444; }
+        .tag-hidden { display: none; }
+
+        /* 步骤导航 */
+        .step-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 8px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            opacity: 0.5;
+        }
+        .step-item.active { opacity: 1; }
+        .step-item.completed { opacity: 0.7; }
+        .step-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .step-item.active .step-num { background: #ffd700; color: #1a5f2a; }
+        .step-item.completed .step-num { background: #4CAF50; }
+        .step-label { font-size: 10px; }
+
+        /* 主操作区 */
+        .main-area {
+            background: rgba(0,0,0,0.25);
+            border-radius: 12px;
+            padding: 12px;
+            min-height: 400px;
+        }
+        .step-title {
+            text-align: center;
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+
+        /* 选择玩家 */
+        .player-select-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .player-btn {
+            padding: 22px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 17px;
+            cursor: pointer;
+        }
+        .player-btn:hover { background: rgba(255,255,255,0.15); }
+        .player-btn.selected { border-color: #ffd700; background: rgba(255,215,0,0.2); }
+
+        /* 类型选择 */
+        .type-select {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .type-btn {
+            flex: 1;
+            padding: 18px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .type-btn:hover { background: rgba(255,255,255,0.15); }
+        .type-btn.selected { border-color: #ffd700; background: rgba(255,215,0,0.2); }
+
+        /* 牌型选择 - 滚动区域 */
+        .hand-types-container {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+        .hand-types {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+        .hand-btn {
+            padding: 10px 4px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            min-height: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .hand-btn:hover { background: rgba(255,255,255,0.15); }
+        .hand-btn.selected { border-color: #ffd700; background: rgba(255,215,0,0.2); }
+        .hand-fan { font-size: 10px; color: #ffd700; margin-top: 3px; }
+
+        /* 杠管理区域 */
+        .gang-manager {
+            margin-bottom: 12px;
+        }
+        .gang-list {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .gang-list-title {
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .gang-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+        .gang-item-info { font-size: 13px; }
+        .gang-item-amount { color: #ffd700; font-size: 13px; }
+        .gang-item-delete {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #ff4444;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .empty-gang {
+            text-align: center;
+            color: #666;
+            padding: 15px;
+            font-size: 13px;
+        }
+
+        /* 添加杠表单 */
+        .add-gang-form {
+            background: rgba(255,107,107,0.1);
+            border-radius: 10px;
+            padding: 12px;
+            border: 1px solid rgba(255,107,107,0.3);
+        }
+        .add-gang-title {
+            font-size: 13px;
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .gang-type-select {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .gang-type-btn {
+            flex: 1;
+            padding: 10px 4px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .gang-type-btn.selected { border-color: #ff6b6b; background: rgba(255,107,107,0.2); }
+        .gang-score-text { font-size: 11px; color: #ff6b6b; margin-top: 4px; }
+
+        .payer-label {
+            font-size: 12px;
+            color: #aaa;
+            margin: 10px 0 6px;
+        }
+        .payer-select-row {
+            display: flex;
+            gap: 6px;
+        }
+        .payer-option {
+            flex: 1;
+            padding: 10px;
+            background: rgba(255,68,68,0.15);
+            border: 2px solid transparent;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .payer-option:hover { background: rgba(255,68,68,0.25); }
+        .payer-option.selected { border-color: #ff4444; background: rgba(255,68,68,0.35); }
+        .payer-option:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .add-gang-btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            background: #4CAF50;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .add-gang-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* 总分数显示 */
+        .total-fan {
+            background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,215,0,0.05));
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .total-fan-label { font-size: 12px; color: #aaa; }
+        .total-fan-display { font-size: 32px; font-weight: bold; color: #ffd700; }
+        .total-fan-detail { font-size: 11px; color: #aaa; margin-top: 4px; }
+
+        /* 微调 */
+        .fan-adjust {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 10px 0;
+        }
+        .fan-btn { width: 40px; height: 40px; border-radius: 50%; border: none; font-size: 18px; cursor: pointer; }
+        .fan-minus { background: #ff4444; color: #fff; }
+        .fan-plus { background: #4CAF50; color: #fff; }
+
+        /* 付钱人选择（胡牌用） */
+        .payer-select-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .payer-btn {
+            padding: 18px;
+            background: rgba(255,68,68,0.2);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .payer-btn:hover { background: rgba(255,68,68,0.3); }
+        .payer-btn.selected { border-color: #ff4444; background: rgba(255,68,68,0.4); }
+        .payer-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* 确认区 */
+        .summary {
+            background: rgba(255,215,0,0.1);
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .summary-text { font-size: 14px; line-height: 1.5; }
+        .summary-amount { font-size: 32px; color: #ffd700; margin-top: 8px; }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        .action-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .action-btn:active { transform: scale(0.98); }
+        .btn-confirm { background: #4CAF50; color: #fff; }
+        .btn-back { background: rgba(255,255,255,0.2); color: #fff; }
+        .btn-done { background: #ffd700; color: #1a5f2a; }
+
+        /* 底部 */
+        .bottom-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .bottom-btn {
+            flex: 1;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* 历史 */
+        .history-area {
+            margin-top: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 10px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        .history-title {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 12px;
+        }
+        .history-item:last-child { border-bottom: none; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🀄 四川麻将计分器</h1>
+    </div>
+
+    <!-- 分数显示 -->
+    <div class="players-grid" id="playersGrid">
+        <div class="player-card" id="card0">
+            <span class="player-tag tag-receiver tag-hidden" id="tag0">收</span>
+            <div class="player-name" onclick="editName(0)"><span id="name0">玩家1</span><span>✏️</span></div>
+            <div class="player-score" id="score0">0</div>
+        </div>
+        <div class="player-card" id="card1">
+            <span class="player-tag tag-receiver tag-hidden" id="tag1">收</span>
+            <div class="player-name" onclick="editName(1)"><span id="name1">玩家2</span><span>✏️</span></div>
+            <div class="player-score" id="score1">0</div>
+        </div>
+        <div class="player-card" id="card2">
+            <span class="player-tag tag-receiver tag-hidden" id="tag2">收</span>
+            <div class="player-name" onclick="editName(2)"><span id="name2">玩家3</span><span>✏️</span></div>
+            <div class="player-score" id="score2">0</div>
+        </div>
+        <div class="player-card" id="card3">
+            <span class="player-tag tag-receiver tag-hidden" id="tag3">收</span>
+            <div class="player-name" onclick="editName(3)"><span id="name3">玩家4</span><span>✏️</span></div>
+            <div class="player-score" id="score3">0</div>
+        </div>
+    </div>
+
+    <!-- 步骤导航 -->
+    <div class="step-nav">
+        <div class="step-item active" id="step1"><div class="step-num">1</div><div class="step-label">选收钱人</div></div>
+        <div class="step-item" id="step2"><div class="step-num">2</div><div class="step-label">收钱详情</div></div>
+        <div class="step-item" id="step4"><div class="step-num">3</div><div class="step-label">确认</div></div>
+    </div>
+
+    <!-- 主操作区 -->
+    <div class="main-area">
+        <!-- 步骤1: 选择收钱人 -->
+        <div id="panel-step1">
+            <div class="step-title">👇 谁收钱？</div>
+            <div class="player-select-grid">
+                <button class="player-btn" onclick="selectReceiver(0)">玩家1</button>
+                <button class="player-btn" onclick="selectReceiver(1)">玩家2</button>
+                <button class="player-btn" onclick="selectReceiver(2)">玩家3</button>
+                <button class="player-btn" onclick="selectReceiver(3)">玩家4</button>
+            </div>
+        </div>
+
+        <!-- 步骤2: 选类型 -->
+        <div id="panel-step2" class="hidden">
+            <div class="step-title" id="step2-title">🀄 收的什么钱？</div>
+
+            <!-- 类型切换标签 -->
+            <div style="display: flex; gap: 10px; margin-bottom: 15px; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 5px;">
+                <button id="tab-hu" onclick="switchTab('hu')" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: #ffd700; color: #1a5f2a; font-size: 15px; cursor: pointer; font-weight: bold;">🀄 胡牌</button>
+                <button id="tab-gang" onclick="switchTab('gang')" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: rgba(255,255,255,0.1); color: #fff; font-size: 15px; cursor: pointer;">🔒 杠钱</button>
+            </div>
+
+            <!-- 胡牌选项 -->
+            <div id="hu-options" class="hidden">
+                <div class="hand-types-container">
+                    <div class="hand-types" style="grid-template-columns: repeat(4, 1fr);">
+                        <button class="hand-btn" onclick="selectHand('pinghu', 0)" style="padding: 8px 4px; min-height: 45px;"><div style="font-size: 12px;">平胡</div><div class="hand-fan" style="font-size: 10px;">0番</div></button>
+                        <button class="hand-btn" onclick="selectHand('duidian', 1)" style="padding: 8px 4px; min-height: 45px;"><div style="font-size: 12px;">对对胡</div><div class="hand-fan" style="font-size: 10px;">1番</div></button>
+                        <button class="hand-btn" onclick="selectHand('qingyise', 2)" style="padding: 8px 4px; min-height: 45px;"><div style="font-size: 12px;">清一色</div><div class="hand-fan" style="font-size: 10px;">2番</div></button>
+                        <button class="hand-btn" onclick="selectHand('yaojiu', 3)" style="padding: 8px 4px; min-height: 45px;"><div style="font-size: 12px;">幺九</div><div class="hand-fan" style="font-size: 10px;">3番</div></button>
+                        <button class="hand-btn" onclick="selectHand('jiangdui', 3)" style="padding: 8px 4px; min-height: 45px;"><div style="font-size: 12px;">将对</div><div class="hand-fan" style="font-size: 10px;">3番</div></button>
+                        <button class="hand-btn" onclick="selectHand('qidui', 2)" style="padding: 8px 4px; min-height: 45px;"><div style="font-size: 12px;">七对</div><div class="hand-fan" style="font-size: 10px;">2番</div></button>
+                        <button class="hand-btn" onclick="selectHand('qingdui', 3)" style="padding: 8px 4px; min-height: 45px;"><div style="font-size: 12px;">清对</div><div class="hand-fan" style="font-size: 10px;">3番</div></button>
+                        <button class="hand-btn" onclick="selectHand('qingqi', 4)" style="padding: 8px 4px; min-height: 45px;"><div style="font-size: 12px;">清七对</div><div class="hand-fan" style="font-size: 10px;">4番</div></button>
+                        <button class="hand-btn" onclick="selectHand('longqidui', 3)" style="padding: 8px 4px; min-height: 45px;"><div style="font-size: 12px;">龙七对</div><div class="hand-fan" style="font-size: 10px;">3番</div></button>
+                        <button class="hand-btn" onclick="selectHand('qinglong', 5)" style="padding: 8px 4px; min-height: 45px;"><div style="font-size: 11px;">清龙七对</div><div class="hand-fan" style="font-size: 10px;">5番</div></button>
+                        <button class="hand-btn" onclick="selectHand('shuanglong', 4)" style="padding: 8px 4px; min-height: 45px;"><div style="font-size: 11px;">双龙七对</div><div class="hand-fan" style="font-size: 10px;">4番</div></button>
+                        <button class="hand-btn" onclick="selectHand('jintaogou', 2)" style="padding: 8px 4px; min-height: 45px;"><div style="font-size: 12px;">金钩吊</div><div class="hand-fan" style="font-size: 10px;">2番</div></button>
+                        <button class="hand-btn" onclick="selectHand('qingjintaogou', 4)" style="padding: 8px 4px; min-height: 45px;"><div style="font-size: 11px;">清金钩吊</div><div class="hand-fan" style="font-size: 10px;">4番</div></button>
+                        <button class="hand-btn" onclick="selectHand('shibasuo', 4)" style="padding: 8px 4px; min-height: 45px;"><div style="font-size: 11px;">十八罗汉</div><div class="hand-fan" style="font-size: 10px;">4番</div></button>
+                        <button class="hand-btn" onclick="selectHand('tianhu', 4)" style="padding: 8px 4px; min-height: 45px;"><div style="font-size: 12px;">天胡</div><div class="hand-fan" style="font-size: 10px;">4番</div></button>
+                        <button class="hand-btn" onclick="selectHand('dihu', 3)" style="padding: 8px 4px; min-height: 45px;"><div style="font-size: 12px;">地胡</div><div class="hand-fan" style="font-size: 10px;">3番</div></button>
+                    </div>
+                </div>
+                <div style="text-align: center; margin: 10px 0;">
+                    <div style="font-size: 13px; color: #aaa; margin-bottom: 10px;">加番选项（可多选）</div>
+                    <!-- 加番按钮行 -->
+                    <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                        <button id="btn-zimo" onclick="toggleFanOption('zimo')" style="flex: 1; padding: 12px 8px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 8px; color: #fff; font-size: 13px; cursor: pointer; text-align: center;">
+                            <div style="font-weight: bold;">自摸</div>
+                            <div style="font-size: 11px; color: #ffd700; margin-top: 2px;">+1番</div>
+                        </button>
+                        <button id="btn-gangshang" onclick="toggleFanOption('gangShangHua')" style="flex: 1; padding: 12px 8px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 8px; color: #fff; font-size: 13px; cursor: pointer; text-align: center;">
+                            <div style="font-weight: bold;">杠上花</div>
+                            <div style="font-size: 11px; color: #ffd700; margin-top: 2px;">+1番</div>
+                        </button>
+                        <button id="btn-haidi" onclick="toggleFanOption('haiDiLao')" style="flex: 1; padding: 12px 8px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 8px; color: #fff; font-size: 13px; cursor: pointer; text-align: center;">
+                            <div style="font-weight: bold;">海底捞月</div>
+                            <div style="font-size: 11px; color: #ffd700; margin-top: 2px;">+1番</div>
+                        </button>
+                    </div>
+                    <!-- 隐藏的原checkbox -->
+                    <input type="checkbox" id="zimo" onchange="updateHuDisplay()" style="display: none;">
+                    <input type="checkbox" id="gangShangHua" onchange="updateHuDisplay()" style="display: none;">
+                    <input type="checkbox" id="haiDiLao" onchange="updateHuDisplay()" style="display: none;">
+                    <!-- 带根选择 -->
+                    <div style="background: rgba(255,215,0,0.1); border-radius: 8px; padding: 10px; margin-top: 8px;">
+                        <div style="font-size: 12px; color: #ffd700; margin-bottom: 8px;">🔥 带根（按杠数计算）</div>
+                        <div style="display: flex; gap: 6px; justify-content: center;">
+                            <button class="gen-btn" id="gen0" onclick="selectGen(0)" style="padding: 8px 12px; background: #ffd700; border: none; border-radius: 6px; color: #1a5f2a; font-size: 13px; cursor: pointer;">0根</button>
+                            <button class="gen-btn" id="gen1" onclick="selectGen(1)" style="padding: 8px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; color: #fff; font-size: 13px; cursor: pointer;">1根</button>
+                            <button class="gen-btn" id="gen2" onclick="selectGen(2)" style="padding: 8px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; color: #fff; font-size: 13px; cursor: pointer;">2根</button>
+                            <button class="gen-btn" id="gen3" onclick="selectGen(3)" style="padding: 8px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; color: #fff; font-size: 13px; cursor: pointer;">3根</button>
+                            <button class="gen-btn" id="gen4" onclick="selectGen(4)" style="padding: 8px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; color: #fff; font-size: 13px; cursor: pointer;">4根</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="total-fan">
+                    <div class="total-fan-label">总番数</div>
+                    <div class="total-fan-display" id="huTotalDisplay">-</div>
+                    <div class="total-fan-detail" id="huDetailText">请选择牌型</div>
+                </div>
+                <div class="fan-adjust">
+                    <button class="fan-btn fan-minus" onclick="adjustHuScore(-1)">−</button>
+                    <div style="font-size: 13px; color: #aaa;">微调</div>
+                    <button class="fan-btn fan-plus" onclick="adjustHuScore(1)">+</button>
+                </div>
+
+                <!-- 胡牌付钱人选择 -->
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div style="font-size: 14px; color: #ff6b6b; margin-bottom: 12px; text-align: center;">
+                        💸 谁付钱？（点一次选中，再点取消）
+                    </div>
+                    <div class="payer-select-row" id="huPayerSelect">
+                        <button class="payer-option" onclick="toggleHuPayer(0)">玩家1</button>
+                        <button class="payer-option" onclick="toggleHuPayer(1)">玩家2</button>
+                        <button class="payer-option" onclick="toggleHuPayer(2)">玩家3</button>
+                        <button class="payer-option" onclick="toggleHuPayer(3)">玩家4</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 杠钱选项 -->
+            <div id="gang-options" class="hidden">
+                <div class="gang-manager">
+                    <!-- 已添加的杠列表 -->
+                    <div class="gang-list" id="gangList">
+                        <div class="gang-list-title">已添加的杠（0个）</div>
+                        <div class="empty-gang">点击下方添加杠</div>
+                    </div>
+
+                    <!-- 添加杠表单 -->
+                    <div class="add-gang-form">
+                        <div class="add-gang-title">➕ 添加一个杠</div>
+                        <div class="gang-type-select">
+                            <button class="gang-type-btn" onclick="selectGangType('an')">
+                                <div>暗杠</div>
+                                <div class="gang-score-text">每家2分</div>
+                            </button>
+                            <button class="gang-type-btn" onclick="selectGangType('ming')">
+                                <div>明杠</div>
+                                <div class="gang-score-text">放杠3分</div>
+                            </button>
+                            <button class="gang-type-btn" onclick="selectGangType('jia')">
+                                <div>加杠</div>
+                                <div class="gang-score-text">每家1分</div>
+                            </button>
+                        </div>
+                        <div class="payer-label">谁付钱？</div>
+                        <div class="payer-select-row" id="gangPayerSelect">
+                            <button class="payer-option" onclick="toggleGangPayer(0)">玩家1</button>
+                            <button class="payer-option" onclick="toggleGangPayer(1)">玩家2</button>
+                            <button class="payer-option" onclick="toggleGangPayer(2)">玩家3</button>
+                            <button class="payer-option" onclick="toggleGangPayer(3)">玩家4</button>
+                        </div>
+                        <button class="add-gang-btn" id="addGangBtn" onclick="addGang()" disabled>添加此杠</button>
+                    </div>
+                </div>
+
+                <div class="total-fan">
+                    <div class="total-fan-label">杠钱总计</div>
+                    <div class="total-fan-display" id="gangTotalDisplay">0分</div>
+                    <div class="total-fan-detail" id="gangDetailText">请添加杠</div>
+                </div>
+            </div>
+
+            <div class="action-btns">
+                <button class="action-btn btn-back" onclick="backToStep(1)">返回</button>
+                <button class="action-btn btn-confirm" onclick="goToStep3()">下一步</button>
+            </div>
+        </div>
+
+        <!-- 步骤4: 确认 -->
+        <div id="panel-step4" class="hidden">
+            <div class="step-title">✅ 确认这笔</div>
+            <div class="summary">
+                <div class="summary-text" id="summaryText"></div>
+                <div class="summary-amount" id="summaryAmount"></div>
+            </div>
+            <div class="action-btns">
+                <button class="action-btn btn-back" onclick="backToStep(2)">返回</button>
+                <button class="action-btn btn-done" onclick="confirmScore()">✓ 收钱完成</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部 -->
+    <div class="bottom-actions">
+        <button class="bottom-btn" onclick="undoLast()">↩️ 撤销</button>
+        <button class="bottom-btn" onclick="resetGame()">🔄 重置</button>
+    </div>
+
+    <!-- 历史 -->
+    <div class="history-area">
+        <div class="history-title" id="historyTitle">📜 最近记录（0）</div>
+        <div id="historyList"><div style="text-align: center; color: #666; padding: 10px;">暂无记录</div></div>
+    </div>
+
+    <script>
+        let players = ['玩家1', '玩家2', '玩家3', '玩家4'];
+        let scores = [0, 0, 0, 0];
+        let history = [];
+        let currentStep = 1;
+
+        let transaction = {
+            receiver: -1,
+            type: '', // 'hu' 或 'gang'
+            subtype: '', // 牌型
+            totalScore: 0, // 总分
+            gangs: [], // 多个杠 {type, payers, amount}
+            payers: [] // 胡牌的付钱人
+        };
+
+        let tempGang = { type: '', payers: [] };
+        let genCount = 0; // 带根数量
+
+        const handNames = {
+            'pinghu': '平胡', 'duidian': '对对胡', 'qingyise': '清一色', 'yaojiu': '幺九',
+            'jiangdui': '将对', 'qidui': '七对', 'qingdui': '清对', 'qingqi': '清七对',
+            'longqidui': '龙七对', 'shuanglong': '双龙七对', 'qinglong': '清龙七对',
+            'jintaogou': '金钩吊', 'qingjintaogou': '清金钩吊', 'shibasuo': '十八罗汉', 'tianhu': '天胡', 'dihu': '地胡'
+        };
+        const handFans = {
+            'pinghu': 0,      // 1分
+            'duidian': 1,     // 大对子 2分
+            'qingyise': 2,    // 清一色 4分
+            'yaojiu': 3,      // 幺九 8分
+            'jiangdui': 3,    // 将对 8分
+            'qidui': 2,       // 七对 4分
+            'qingdui': 3,     // 清大对 8分
+            'qingqi': 4,      // 清七对 16分
+            'longqidui': 3,   // 龙七对 8分
+            'qinglong': 5,    // 清龙七对 5番=32分（封顶）
+            'shuanglong': 4,  // 双龙七对 16分
+            'jintaogou': 2,   // 金钩钓 4分
+            'qingjintaogou': 4, // 清金钩吊 16分
+            'shibasuo': 4,    // 十八罗汉 16分
+            'tianhu': 4,      // 天胡 16分
+            'dihu': 3         // 地胡 8分
+        };
+        const gangNames = { 'an': '暗杠', 'ming': '明杠', 'jia': '加杠' };
+        const gangAmounts = { 'an': 2, 'ming': 3, 'jia': 1 };
+
+        // 计算番数对应的分数：0番=1分, 1番=2分, n番=2^n分
+        function calculateScore(fan) {
+            return Math.pow(2, fan);
+        }
+
+        function init() {
+            updatePlayerBtns();
+        }
+
+        function updatePlayerBtns() {
+            document.querySelectorAll('.player-btn').forEach((btn, i) => btn.textContent = players[i]);
+            document.querySelectorAll('.payer-btn').forEach((btn, i) => btn.textContent = players[i]);
+            document.querySelectorAll('.payer-option').forEach((btn, i) => btn.textContent = players[i]);
+            for (let i = 0; i < 4; i++) document.getElementById(`name${i}`).textContent = players[i];
+        }
+
+        // 选择收钱人
+        function selectReceiver(idx) {
+            transaction.receiver = idx;
+            updatePlayerTags();
+            document.getElementById('step2-title').textContent = `🀄 ${players[idx]} 收什么钱？`;
+            goToStep(2);
+        }
+
+        function updatePlayerTags() {
+            document.querySelectorAll('.player-card').forEach((c, i) => {
+                c.classList.toggle('receiver', i === transaction.receiver);
+                c.classList.remove('payer');
+            });
+            document.querySelectorAll('.player-tag').forEach((t, i) => {
+                t.classList.toggle('tag-hidden', i !== transaction.receiver);
+                if (i === transaction.receiver) {
+                    t.textContent = '收';
+                    t.className = 'player-tag tag-receiver';
+                }
+            });
+        }
+
+        // 切换标签
+        function switchTab(type) {
+            transaction.type = type;
+            document.getElementById('tab-hu').style.background = type === 'hu' ? '#ffd700' : 'rgba(255,255,255,0.1)';
+            document.getElementById('tab-hu').style.color = type === 'hu' ? '#1a5f2a' : '#fff';
+            document.getElementById('tab-gang').style.background = type === 'gang' ? '#ffd700' : 'rgba(255,255,255,0.1)';
+            document.getElementById('tab-gang').style.color = type === 'gang' ? '#1a5f2a' : '#fff';
+
+            document.getElementById('hu-options').classList.toggle('hidden', type !== 'hu');
+            document.getElementById('gang-options').classList.toggle('hidden', type !== 'gang');
+
+            if (type === 'hu') {
+                // 重置胡牌状态
+                transaction.subtype = '';
+                transaction.totalScore = 0;
+                transaction.payers = [];
+                genCount = 0;
+                document.getElementById('zimo').checked = false;
+                document.getElementById('gangShangHua').checked = false;
+                document.getElementById('haiDiLao').checked = false;
+                updateFanButtons();
+                updateGenButtons();
+                document.querySelectorAll('.hand-btn').forEach(b => b.classList.remove('selected'));
+                updateHuDisplay();
+                updateHuPayerBtns();
+            } else {
+                // 初始化杠
+                transaction.gangs = [];
+                tempGang = { type: '', payers: [] };
+                updateGangDisplay();
+                updateGangPayerBtns();
+            }
+        }
+
+        // 选择收钱人后进入第2步
+        function selectReceiver(idx) {
+            transaction.receiver = idx;
+            updatePlayerTags();
+            document.getElementById('step2-title').textContent = `🀄 ${players[idx]} 收什么钱？`;
+            goToStep(2);
+            // 默认显示胡牌
+            switchTab('hu');
+        }
+
+        // 选择带根
+        function selectGen(n) {
+            genCount = n;
+            updateGenButtons();
+            updateHuDisplay();
+        }
+
+        function updateGenButtons() {
+            for (let i = 0; i <= 4; i++) {
+                const btn = document.getElementById('gen' + i);
+                if (btn) {
+                    btn.style.background = i === genCount ? '#ffd700' : 'rgba(255,255,255,0.2)';
+                    btn.style.color = i === genCount ? '#1a5f2a' : '#fff';
+                }
+            }
+        }
+
+        // 切换加番选项
+        function toggleFanOption(option) {
+            const checkbox = document.getElementById(option === 'zimo' ? 'zimo' : option === 'gangShangHua' ? 'gangShangHua' : 'haiDiLao');
+            checkbox.checked = !checkbox.checked;
+            updateFanButtons();
+            updateHuDisplay();
+        }
+
+        function updateFanButtons() {
+            const btnZimo = document.getElementById('btn-zimo');
+            const btnGang = document.getElementById('btn-gangshang');
+            const btnHai = document.getElementById('btn-haidi');
+
+            if (btnZimo) {
+                btnZimo.style.background = document.getElementById('zimo').checked ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.1)';
+                btnZimo.style.borderColor = document.getElementById('zimo').checked ? '#ffd700' : 'rgba(255,255,255,0.3)';
+            }
+            if (btnGang) {
+                btnGang.style.background = document.getElementById('gangShangHua').checked ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.1)';
+                btnGang.style.borderColor = document.getElementById('gangShangHua').checked ? '#ffd700' : 'rgba(255,255,255,0.3)';
+            }
+            if (btnHai) {
+                btnHai.style.background = document.getElementById('haiDiLao').checked ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.1)';
+                btnHai.style.borderColor = document.getElementById('haiDiLao').checked ? '#ffd700' : 'rgba(255,255,255,0.3)';
+            }
+        }
+
+        // 选择牌型
+        function selectHand(type, fan) {
+            transaction.subtype = type;
+            transaction.totalScore = fan;
+            // 默认全选其他三家（自摸）
+            transaction.payers = [];
+            for (let i = 0; i < 4; i++) {
+                if (i !== transaction.receiver) transaction.payers.push(i);
+            }
+            document.querySelectorAll('.hand-btn').forEach(btn => {
+                const btnName = handNames[type];
+                btn.classList.toggle('selected', btn.querySelector('div').textContent === btnName);
+            });
+            updateHuDisplay();
+            updateHuPayerBtns();
+            updateCardVisuals();
+        }
+
+        // 切换胡牌付钱人
+        function toggleHuPayer(idx) {
+            if (idx === transaction.receiver) return;
+            const pos = transaction.payers.indexOf(idx);
+            if (pos > -1) transaction.payers.splice(pos, 1);
+            else transaction.payers.push(idx);
+            updateHuPayerBtns();
+            updateCardVisuals();
+        }
+
+        function updateHuPayerBtns() {
+            document.querySelectorAll('#huPayerSelect .payer-option').forEach((btn, i) => {
+                btn.disabled = (i === transaction.receiver);
+                btn.classList.toggle('selected', transaction.payers.includes(i));
+            });
+        }
+
+        // 更新胡牌显示
+        function updateHuDisplay() {
+            if (!transaction.subtype) {
+                document.getElementById('huTotalDisplay').textContent = '-';
+                document.getElementById('huDetailText').textContent = '请选择牌型';
+                return;
+            }
+            const isZimo = document.getElementById('zimo').checked;
+            const isGangShangHua = document.getElementById('gangShangHua').checked;
+            const isHaiDiLao = document.getElementById('haiDiLao').checked;
+            let totalFan = handFans[transaction.subtype];
+            if (isZimo) totalFan += 1;
+            if (isGangShangHua) totalFan += 1;
+            if (isHaiDiLao) totalFan += 1;
+            totalFan += genCount; // 带根加番
+            transaction.totalScore = totalFan;
+
+            let detail = handNames[transaction.subtype] + ' ' + handFans[transaction.subtype] + '番';
+            if (isZimo) detail += ' + 自摸1番';
+            if (isGangShangHua) detail += ' + 杠上花1番';
+            if (isHaiDiLao) detail += ' + 海底捞月1番';
+            if (genCount > 0) detail += ' + ' + genCount + '根' + genCount + '番';
+
+            const actualScore = Math.pow(2, totalFan);
+            document.getElementById('huTotalDisplay').textContent = actualScore + '分';
+            document.getElementById('huDetailText').textContent = detail + ' = ' + actualScore + '分';
+        }
+
+        function adjustHuScore(delta) {
+            if (!transaction.subtype) return;
+            let currentFan = transaction.totalScore;
+            currentFan = Math.max(0, currentFan + delta);
+            transaction.totalScore = currentFan;
+
+            const actualScore = Math.pow(2, currentFan);
+            document.getElementById('huTotalDisplay').textContent = actualScore + '分';
+
+            const isZimo = document.getElementById('zimo').checked;
+            const isGangShangHua = document.getElementById('gangShangHua').checked;
+            const isHaiDiLao = document.getElementById('haiDiLao').checked;
+            let detail = handNames[transaction.subtype] + ' ' + handFans[transaction.subtype] + '番';
+            if (isZimo) detail += ' + 自摸1番';
+            if (isGangShangHua) detail += ' + 杠上花1番';
+            if (isHaiDiLao) detail += ' + 海底捞月1番';
+            if (genCount > 0) detail += ' + ' + genCount + '根' + genCount + '番';
+            const baseFan = handFans[transaction.subtype] + (isZimo ? 1 : 0) + (isGangShangHua ? 1 : 0) + (isHaiDiLao ? 1 : 0) + genCount;
+            const adjust = currentFan - baseFan;
+            if (adjust !== 0) detail += ` (微调${adjust > 0 ? '+' : ''}${adjust}番)`;
+            detail += ' = ' + actualScore + '分';
+            document.getElementById('huDetailText').textContent = detail;
+        }
+
+        // 选择杠类型
+        function selectGangType(type) {
+            tempGang.type = type;
+            // 默认选中其他所有玩家（除了收钱人）
+            tempGang.payers = [];
+            for (let i = 0; i < 4; i++) {
+                if (i !== transaction.receiver) tempGang.payers.push(i);
+            }
+
+            document.querySelectorAll('.gang-type-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.textContent.includes(gangNames[type]));
+            });
+
+            updateGangPayerBtns();
+            updateAddGangBtn();
+        }
+
+        // 切换杠付钱人
+        function toggleGangPayer(idx) {
+            if (idx === transaction.receiver) return;
+            const pos = tempGang.payers.indexOf(idx);
+            if (pos > -1) {
+                tempGang.payers.splice(pos, 1);
+            } else {
+                tempGang.payers.push(idx);
+            }
+            updateGangPayerBtns();
+            updateAddGangBtn();
+        }
+
+        function updateGangPayerBtns() {
+            document.querySelectorAll('#gangPayerSelect .payer-option').forEach((btn, i) => {
+                btn.textContent = players[i];
+                btn.disabled = (i === transaction.receiver);
+                btn.classList.toggle('selected', tempGang.payers.includes(i));
+            });
+        }
+
+        function updateAddGangBtn() {
+            document.getElementById('addGangBtn').disabled = !tempGang.type || tempGang.payers.length === 0;
+        }
+
+        // 添加一个杠
+        function addGang() {
+            if (!tempGang.type || tempGang.payers.length === 0) return;
+
+            const amount = gangAmounts[tempGang.type];
+            const gangItem = {
+                type: tempGang.type,
+                payers: [...tempGang.payers],
+                amount: amount
+            };
+            transaction.gangs.push(gangItem);
+
+            // 重置临时杠
+            tempGang = { type: '', payers: [] };
+            document.querySelectorAll('.gang-type-btn').forEach(b => b.classList.remove('selected'));
+            updateGangPayerBtns();
+            updateAddGangBtn();
+
+            updateGangDisplay();
+        }
+
+        // 删除杠
+        function removeGang(idx) {
+            transaction.gangs.splice(idx, 1);
+            updateGangDisplay();
+        }
+
+        // 更新杠显示
+        function updateGangDisplay() {
+            const list = document.getElementById('gangList');
+            const title = document.querySelector('.gang-list-title');
+            title.textContent = `已添加的杠（${transaction.gangs.length}个）`;
+
+            if (transaction.gangs.length === 0) {
+                list.innerHTML = '<div class="gang-list-title">已添加的杠（0个）</div><div class="empty-gang">点击下方添加杠</div>';
+            } else {
+                let html = '<div class="gang-list-title">已添加的杠（' + transaction.gangs.length + '个）</div>';
+                transaction.gangs.forEach((g, idx) => {
+                    const payerNames = g.payers.map(i => players[i]).join('、');
+                    const total = g.amount * g.payers.length;
+                    html += `<div class="gang-item">
+                        <div class="gang-item-info">${gangNames[g.type]} - ${payerNames}</div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="gang-item-amount">+${total}分</div>
+                            <button class="gang-item-delete" onclick="removeGang(${idx})">✕</button>
+                        </div>
+                    </div>`;
+                });
+                list.innerHTML = html;
+            }
+
+            // 计算总分
+            let total = 0;
+            transaction.gangs.forEach(g => total += g.amount * g.payers.length);
+
+            document.getElementById('gangTotalDisplay').textContent = total + '分';
+            document.getElementById('gangDetailText').textContent = transaction.gangs.length > 0 ?
+                `共${transaction.gangs.length}个杠` : '请添加杠';
+        }
+
+        // 去步骤3
+        function goToStep3() {
+            if (transaction.type === 'hu') {
+                if (!transaction.subtype) {
+                    alert('请选择一种牌型');
+                    return;
+                }
+                if (transaction.payers.length === 0) {
+                    alert('请至少选择一个付钱人');
+                    return;
+                }
+                // 胡牌已选好，直接去第4步确认
+                goToStep(4);
+                updateSummary();
+            } else {
+                if (transaction.gangs.length === 0) {
+                    alert('请至少添加一个杠');
+                    return;
+                }
+                // 杠钱已在第2步选完付钱人，直接去第4步
+                goToStep(4);
+                updateSummary();
+            }
+        }
+
+        function updatePayerBtns() {
+            document.querySelectorAll('.payer-btn').forEach((btn, i) => {
+                btn.disabled = (i === transaction.receiver);
+                btn.classList.toggle('selected', transaction.payers.includes(i));
+            });
+            updateCardVisuals();
+        }
+
+        function updateCardVisuals() {
+            document.querySelectorAll('.player-card').forEach((c, i) => {
+                if (i === transaction.receiver) {
+                    c.classList.add('receiver');
+                    c.classList.remove('payer');
+                } else if (transaction.payers.includes(i)) {
+                    c.classList.add('payer');
+                    c.classList.remove('receiver');
+                } else {
+                    c.classList.remove('receiver', 'payer');
+                }
+            });
+            document.querySelectorAll('.player-tag').forEach((t, i) => {
+                if (i === transaction.receiver) {
+                    t.classList.remove('tag-hidden');
+                    t.textContent = '收';
+                    t.className = 'player-tag tag-receiver';
+                } else if (transaction.payers.includes(i)) {
+                    t.classList.remove('tag-hidden');
+                    t.textContent = '付';
+                    t.className = 'player-tag tag-payer';
+                } else {
+                    t.classList.add('tag-hidden');
+                }
+            });
+        }
+
+        function togglePayer(idx) {
+            if (idx === transaction.receiver) return;
+            const pos = transaction.payers.indexOf(idx);
+            if (pos > -1) transaction.payers.splice(pos, 1);
+            else transaction.payers.push(idx);
+            updatePayerBtns();
+        }
+
+        // 去步骤4
+        function goToStep4() {
+            if (transaction.type === 'hu' && transaction.payers.length === 0) {
+                alert('请至少选择一个付钱人');
+                return;
+            }
+            goToStep(4);
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const receiverName = players[transaction.receiver];
+            let desc = '', amountText = '';
+
+            if (transaction.type === 'hu') {
+                const isZimo = document.getElementById('zimo')?.checked;
+                const isGangShangHua = document.getElementById('gangShangHua')?.checked;
+                const isHaiDiLao = document.getElementById('haiDiLao')?.checked;
+                const actualScore = Math.pow(2, transaction.totalScore);
+                desc = `<b>${receiverName}</b> ${handNames[transaction.subtype]}`;
+                if (isZimo) desc += '(自摸)';
+                if (isGangShangHua) desc += '(杠上花)';
+                if (isHaiDiLao) desc += '(海底捞月)';
+                if (genCount > 0) desc += `(带${genCount}根)`;
+                desc += `<br>${transaction.totalScore}番 = ${actualScore}分/人<br>`;
+                desc += `${transaction.payers.map(i => players[i]).join('、')} 各付 ${actualScore} 分`;
+                amountText = `+${actualScore * transaction.payers.length}分`;
+            } else {
+                desc = `<b>${receiverName}</b> 杠钱<br>`;
+                transaction.gangs.forEach(g => {
+                    desc += `${gangNames[g.type]}: ${g.payers.map(i => players[i]).join('、')} 付 ${g.amount * g.payers.length}分<br>`;
+                });
+                let total = 0;
+                transaction.gangs.forEach(g => total += g.amount * g.payers.length);
+                amountText = `+${total}分`;
+            }
+
+            document.getElementById('summaryText').innerHTML = desc;
+            document.getElementById('summaryAmount').textContent = amountText;
+        }
+
+        // 确认
+        function confirmScore() {
+            const changes = [0, 0, 0, 0];
+
+            if (transaction.type === 'hu') {
+                // 使用计算后的实际分数
+                const actualScore = Math.pow(2, transaction.totalScore);
+                transaction.payers.forEach(payer => {
+                    scores[payer] -= actualScore;
+                    scores[transaction.receiver] += actualScore;
+                    changes[payer] = -actualScore;
+                });
+                changes[transaction.receiver] = actualScore * transaction.payers.length;
+
+                const isZimo = document.getElementById('zimo')?.checked;
+                const isGangShangHua = document.getElementById('gangShangHua')?.checked;
+                const isHaiDiLao = document.getElementById('haiDiLao')?.checked;
+                let desc = handNames[transaction.subtype];
+                if (genCount > 0) desc += `(带${genCount}根)`;
+                if (isZimo) desc += '(自摸)';
+                if (isGangShangHua) desc += '(杠上花)';
+                if (isHaiDiLao) desc += '(海底捞月)';
+
+                const actualTotal = actualScore * transaction.payers.length;
+                history.push({
+                    time: new Date().toLocaleTimeString(),
+                    receiver: players[transaction.receiver],
+                    desc: desc + ` (${transaction.totalScore}番)`,
+                    amount: actualTotal,
+                    changes: changes
+                });
+            } else {
+                transaction.gangs.forEach(g => {
+                    g.payers.forEach(payer => {
+                        scores[payer] -= g.amount;
+                        scores[transaction.receiver] += g.amount;
+                        changes[payer] -= g.amount;
+                    });
+                    changes[transaction.receiver] += g.amount * g.payers.length;
+                });
+
+                let total = 0;
+                transaction.gangs.forEach(g => total += g.amount * g.payers.length);
+
+                history.push({
+                    time: new Date().toLocaleTimeString(),
+                    receiver: players[transaction.receiver],
+                    desc: `杠钱(${transaction.gangs.length}个)`,
+                    amount: total,
+                    changes: changes
+                });
+            }
+
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`score${i}`).textContent = scores[i];
+            }
+
+            renderHistory();
+            resetTransaction();
+            goToStep(1);
+        }
+
+        function resetTransaction() {
+            transaction = { receiver: -1, type: '', subtype: '', totalScore: 0, gangs: [], payers: [] };
+            tempGang = { type: '', payers: [] };
+            genCount = 0;
+            document.querySelectorAll('.player-card').forEach(c => c.classList.remove('receiver', 'payer'));
+            document.querySelectorAll('.player-tag').forEach(t => t.classList.add('tag-hidden'));
+            document.querySelectorAll('.hand-btn').forEach(b => b.classList.remove('selected'));
+            document.querySelectorAll('.gang-type-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById('zimo').checked = false;
+            document.getElementById('gangShangHua').checked = false;
+            document.getElementById('haiDiLao').checked = false;
+            updateFanButtons();
+            updateGenButtons();
+            updateGangDisplay();
+            updateHuDisplay();
+            updateHuPayerBtns();
+        }
+
+        function goToStep(step) {
+            currentStep = step;
+            // 步骤导航：1->step1, 2->step2, 4->step3(显示为第3步)
+            const navSteps = {1: 'step1', 2: 'step2', 4: 'step4'};
+            for (let i of [1, 2, 4]) {
+                const el = document.getElementById(navSteps[i]);
+                if (!el) continue;
+                el.classList.remove('active', 'completed');
+                if (i === step) el.classList.add('active');
+                else if ((step === 4 && i === 2) || (step === 2 && i === 1)) el.classList.add('completed');
+            }
+            // 面板显示
+            document.getElementById('panel-step1').classList.toggle('hidden', step !== 1);
+            document.getElementById('panel-step2').classList.toggle('hidden', step !== 2);
+            document.getElementById('panel-step4').classList.toggle('hidden', step !== 4);
+        }
+
+        function backToStep(step) {
+            // 返回上一步
+            goToStep(step);
+        }
+
+        function undoLast() {
+            if (history.length === 0) return;
+            const last = history.pop();
+            for (let i = 0; i < 4; i++) {
+                scores[i] -= last.changes[i];
+                document.getElementById(`score${i}`).textContent = scores[i];
+            }
+            renderHistory();
+        }
+
+        function renderHistory() {
+            document.getElementById('historyTitle').textContent = `📜 最近记录（${history.length}）`;
+            const list = document.getElementById('historyList');
+            if (history.length === 0) {
+                list.innerHTML = '<div style="text-align: center; color: #666; padding: 10px;">暂无记录</div>';
+                return;
+            }
+            list.innerHTML = history.slice(-5).reverse().map(h =>
+                `<div class="history-item">
+                    <span>${h.time} ${h.receiver} ${h.desc}</span>
+                    <span style="color: #ffd700;">+${h.amount}</span>
+                </div>`
+            ).join('');
+        }
+
+        function resetGame() {
+            if (!confirm('确定要重置所有分数吗？')) return;
+            scores = [0, 0, 0, 0];
+            history = [];
+            for (let i = 0; i < 4; i++) document.getElementById(`score${i}`).textContent = '0';
+            resetTransaction();
+            goToStep(1);
+            renderHistory();
+        }
+
+        function editName(idx) {
+            const name = prompt('修改名字:', players[idx]);
+            if (name && name.trim()) {
+                players[idx] = name.trim().substring(0, 6);
+                updatePlayerBtns();
+                renderHistory();
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
