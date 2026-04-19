@@ -5,165 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>四川麻将计分器</title>
     <style>
-        /* ==================== CSS 变量定义（主题系统） ==================== */
-        :root {
-            /* 默认主题：经典绿 */
-            --bg-gradient-start: #1a5f2a;
-            --bg-gradient-end: #0d3d1a;
-            --text-color: #fff;
-            --card-bg: rgba(255,255,255,0.1);
-            --card-border: transparent;
-            --highlight-color: var(--highlight-color);
-            --accent-color: var(--accent-color);
-            --danger-color: var(--danger-color);
-            --main-area-bg: rgba(0,0,0,0.25);
-            --section-border: rgba(255,255,255,0.1);
-            --payer-bg: rgba(255,68,68,0.15);
-            --payer-selected-bg: rgba(255,68,68,0.35);
-            --gang-bg: rgba(255,107,107,0.1);
-            --gang-border: rgba(255,107,107,0.3);
-            --confirm-bg: rgba(255,215,0,0.1);
-            --confirm-border: #ffd700;
-            --history-bg: rgba(0,0,0,0.2);
-            --nav-bg: rgba(0,0,0,0.2);
-            --shadow-color: rgba(0,0,0,0.3);
-        }
-
-        /* 清新蓝主题 */
-        [data-theme="fresh"] {
-            --bg-gradient-start: #2196F3;
-            --bg-gradient-end: #1565C0;
-            --text-color: #fff;
-            --card-bg: rgba(255,255,255,0.15);
-            --highlight-color: #FFEB3B;
-            --accent-color: #00BCD4;
-            --danger-color: #FF7043;
-            --main-area-bg: rgba(255,255,255,0.1);
-            --section-border: rgba(255,255,255,0.2);
-            --payer-bg: rgba(255,112,67,0.2);
-            --payer-selected-bg: rgba(255,112,67,0.4);
-            --gang-bg: rgba(0,188,212,0.15);
-            --gang-border: rgba(0,188,212,0.4);
-            --confirm-bg: rgba(255,235,59,0.15);
-            --confirm-border: #FFEB3B;
-            --history-bg: rgba(255,255,255,0.1);
-            --nav-bg: rgba(255,255,255,0.1);
-        }
-
-        /* 科技感深色主题 */
-        [data-theme="cyber"] {
-            --bg-gradient-start: #1a1a2e;
-            --bg-gradient-end: #16213e;
-            --text-color: #eaeaea;
-            --card-bg: rgba(0,255,255,0.08);
-            --highlight-color: #00ff9f;
-            --accent-color: #00d4ff;
-            --danger-color: #ff0055;
-            --main-area-bg: rgba(0,0,0,0.4);
-            --section-border: rgba(0,255,255,0.2);
-            --payer-bg: rgba(255,0,85,0.15);
-            --payer-selected-bg: rgba(255,0,85,0.35);
-            --gang-bg: rgba(0,212,255,0.1);
-            --gang-border: rgba(0,212,255,0.3);
-            --confirm-bg: rgba(0,255,159,0.1);
-            --confirm-border: #00ff9f;
-            --history-bg: rgba(0,0,0,0.3);
-            --nav-bg: rgba(0,255,255,0.1);
-            --shadow-color: rgba(0,255,255,0.2);
-        }
-
-        /* 春日粉主题 */
-        [data-theme="spring"] {
-            --bg-gradient-start: #f8bbd0;
-            --bg-gradient-end: #f48fb1;
-            --text-color: #4a4a4a;
-            --card-bg: rgba(255,255,255,0.25);
-            --highlight-color: #e91e63;
-            --accent-color: #81c784;
-            --danger-color: #ff7043;
-            --main-area-bg: rgba(255,255,255,0.2);
-            --section-border: rgba(255,255,255,0.3);
-            --payer-bg: rgba(255,112,67,0.15);
-            --payer-selected-bg: rgba(255,112,67,0.3);
-            --gang-bg: rgba(129,199,132,0.15);
-            --gang-border: rgba(129,199,132,0.4);
-            --confirm-bg: rgba(233,30,99,0.1);
-            --confirm-border: #e91e63;
-            --history-bg: rgba(255,255,255,0.15);
-            --nav-bg: rgba(255,255,255,0.2);
-        }
-
-        /* 暗夜紫主题 */
-        [data-theme="midnight"] {
-            --bg-gradient-start: #2d1b4e;
-            --bg-gradient-end: #1a0f2e;
-            --text-color: #e0e0e0;
-            --card-bg: rgba(138,43,226,0.1);
-            --highlight-color: #ff00ff;
-            --accent-color: #9370db;
-            --danger-color: #ff4081;
-            --main-area-bg: rgba(0,0,0,0.35);
-            --section-border: rgba(138,43,226,0.2);
-            --payer-bg: rgba(255,64,129,0.15);
-            --payer-selected-bg: rgba(255,64,129,0.35);
-            --gang-bg: rgba(147,112,219,0.1);
-            --gang-border: rgba(147,112,219,0.3);
-            --confirm-bg: rgba(255,0,255,0.1);
-            --confirm-border: #ff00ff;
-            --history-bg: rgba(0,0,0,0.25);
-            --nav-bg: rgba(138,43,226,0.15);
-            --shadow-color: rgba(138,43,226,0.3);
-        }
-
-        /* 暖阳橙主题 */
-        [data-theme="sunset"] {
-            --bg-gradient-start: #ff7043;
-            --bg-gradient-end: #ff5722;
-            --text-color: #fff;
-            --card-bg: rgba(255,255,255,0.15);
-            --highlight-color: #ffeb3b;
-            --accent-color: var(--accent-color);
-            --danger-color: #f44336;
-            --main-area-bg: rgba(0,0,0,0.15);
-            --section-border: rgba(255,255,255,0.2);
-            --payer-bg: rgba(244,67,54,0.2);
-            --payer-selected-bg: rgba(244,67,54,0.35);
-            --gang-bg: rgba(76,175,80,0.15);
-            --gang-border: rgba(76,175,80,0.4);
-            --confirm-bg: rgba(255,235,59,0.15);
-            --confirm-border: #ffeb3b;
-            --history-bg: rgba(0,0,0,0.1);
-            --nav-bg: rgba(255,255,255,0.15);
-        }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            background: linear-gradient(135deg, #1a5f2a 0%, #0d3d1a 100%);
             min-height: 100vh;
-            color: var(--text-color);
+            color: #fff;
             padding: 10px;
         }
 
         /* 顶部玩家分数卡 */
-        .header { text-align: center; padding: 8px 0; position: relative; }
+        .header { text-align: center; padding: 8px 0; }
         .header h1 { font-size: 18px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-        .theme-selector {
-            position: absolute;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-        .theme-selector select {
-            background: var(--card-bg);
-            color: var(--text-color);
-            border: 1px solid var(--section-border);
-            border-radius: 6px;
-            padding: 4px 8px;
-            font-size: 11px;
-            cursor: pointer;
-            outline: none;
-        }
         .players-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -171,14 +24,14 @@
             margin: 10px 0;
         }
         .player-card {
-            background: var(--card-bg);
+            background: rgba(255,255,255,0.1);
             border-radius: 10px;
             padding: 8px 4px;
             text-align: center;
-            border: 2px solid var(--card-border);
+            border: 2px solid transparent;
             position: relative;
         }
-        .player-card.active { border-color: var(--highlight-color); background: var(--card-bg); }
+        .player-card.active { border-color: #ffd700; background: rgba(255,215,0,0.15); }
         .player-name {
             font-size: 11px;
             margin-bottom: 4px;
@@ -188,21 +41,21 @@
             justify-content: center;
             gap: 2px;
         }
-        .player-score { font-size: 20px; font-weight: bold; color: var(--highlight-color); }
+        .player-score { font-size: 20px; font-weight: bold; color: #ffd700; }
         .score-change {
             font-size: 10px;
             margin-top: 2px;
             opacity: 0.8;
         }
-        .score-change.positive { color: var(--accent-color); }
-        .score-change.negative { color: var(--danger-color); }
+        .score-change.positive { color: #4CAF50; }
+        .score-change.negative { color: #ff6b6b; }
 
         /* 步骤导航 */
         .step-nav {
             display: flex;
             justify-content: space-around;
             padding: 8px;
-            background: var(--nav-bg);
+            background: rgba(0,0,0,0.2);
             border-radius: 8px;
             margin-bottom: 10px;
         }
@@ -227,13 +80,13 @@
             font-size: 13px;
             font-weight: bold;
         }
-        .step-item.active .step-num { background: var(--highlight-color); color: var(--bg-gradient-end); }
-        .step-item.completed .step-num { background: var(--accent-color); }
+        .step-item.active .step-num { background: #ffd700; color: #1a5f2a; }
+        .step-item.completed .step-num { background: #4CAF50; }
         .step-label { font-size: 10px; }
 
         /* 主操作区 */
         .main-area {
-            background: var(--main-area-bg);
+            background: rgba(0,0,0,0.25);
             border-radius: 12px;
             padding: 12px;
             min-height: 420px;
@@ -242,7 +95,7 @@
             text-align: center;
             font-size: 16px;
             margin-bottom: 12px;
-            color: var(--highlight-color);
+            color: #ffd700;
         }
 
         /* 步骤面板 */
@@ -251,14 +104,14 @@
 
         /* === 步骤1: 整局概览 === */
         .round-summary {
-            background: var(--card-bg);
+            background: rgba(255,255,255,0.05);
             border-radius: 10px;
             padding: 12px;
             margin-bottom: 12px;
         }
         .summary-title {
             font-size: 14px;
-            color: var(--highlight-color);
+            color: #ffd700;
             text-align: center;
             margin-bottom: 10px;
         }
@@ -268,17 +121,17 @@
             gap: 6px;
         }
         .summary-card {
-            background: var(--card-bg);
+            background: rgba(255,255,255,0.08);
             border-radius: 8px;
             padding: 8px 4px;
             text-align: center;
             cursor: pointer;
             border: 1px solid transparent;
         }
-        .summary-card:hover { border-color: var(--section-border); }
-        .summary-card.has-data { border-color: var(--accent-color); }
+        .summary-card:hover { border-color: rgba(255,255,255,0.3); }
+        .summary-card.has-data { border-color: #4CAF50; background: rgba(76,175,80,0.1); }
         .summary-card-name { font-size: 11px; margin-bottom: 6px; }
-        .summary-card-hu { font-size: 10px; color: var(--highlight-color); margin-bottom: 4px; }
+        .summary-card-hu { font-size: 10px; color: #ffd700; margin-bottom: 4px; }
         .summary-card-gang { font-size: 9px; color: #aaa; }
         .summary-card-status {
             font-size: 10px;
@@ -287,18 +140,18 @@
             border-radius: 4px;
             display: inline-block;
         }
-        .status-empty { background: var(--card-bg); color: #888; }
-        .status-ready { background: var(--accent-color); color: #fff; opacity: 0.8; }
+        .status-empty { background: rgba(255,255,255,0.1); color: #888; }
+        .status-ready { background: rgba(76,175,80,0.3); color: #4CAF50; }
         .status-skipped { background: rgba(150,150,150,0.2); color: #aaa; }
         .summary-card.skipped { opacity: 0.7; }
 
         .add-player-btn {
             width: 100%;
             padding: 14px;
-            background: var(--accent-color);
+            background: #4CAF50;
             border: none;
             border-radius: 10px;
-            color: var(--text-color);
+            color: #fff;
             font-size: 16px;
             cursor: pointer;
             margin-top: 10px;
@@ -317,14 +170,14 @@
         }
         .section-title-flex {
             font-size: 14px;
-            color: var(--highlight-color);
+            color: #ffd700;
             display: flex;
             align-items: center;
             gap: 6px;
         }
         .toggle-btn {
             padding: 4px 10px;
-            background: var(--card-bg);
+            background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.3);
             border-radius: 4px;
             color: #fff;
@@ -332,8 +185,8 @@
             cursor: pointer;
         }
         .toggle-btn.active {
-            background: var(--accent-color);
-            border-color: var(--accent-color);
+            background: #4CAF50;
+            border-color: #4CAF50;
         }
 
         /* 胡牌区域 */
@@ -355,7 +208,7 @@
         }
         .hand-btn {
             padding: 8px 2px;
-            background: var(--card-bg);
+            background: rgba(255,255,255,0.1);
             border: 2px solid transparent;
             border-radius: 8px;
             color: #fff;
@@ -368,8 +221,8 @@
             justify-content: center;
         }
         .hand-btn:hover { background: rgba(255,255,255,0.15); }
-        .hand-btn.selected { border-color: var(--highlight-color); background: rgba(255,215,0,0.2); }
-        .hand-fan { font-size: 9px; color: var(--highlight-color); margin-top: 2px; }
+        .hand-btn.selected { border-color: #ffd700; background: rgba(255,215,0,0.2); }
+        .hand-fan { font-size: 9px; color: #ffd700; margin-top: 2px; }
 
         /* 加番选项 */
         .fan-options {
@@ -382,7 +235,7 @@
             flex: 1;
             min-width: 70px;
             padding: 8px 4px;
-            background: var(--card-bg);
+            background: rgba(255,255,255,0.1);
             border: 2px solid rgba(255,255,255,0.3);
             border-radius: 8px;
             color: #fff;
@@ -392,19 +245,19 @@
         }
         .fan-btn.active {
             background: rgba(255,215,0,0.3);
-            border-color: var(--highlight-color);
+            border-color: #ffd700;
         }
         .fan-btn .fan-label { font-weight: bold; display: block; font-size: 11px; }
-        .fan-btn .fan-value { font-size: 9px; color: var(--highlight-color); margin-top: 2px; display: block; }
+        .fan-btn .fan-value { font-size: 9px; color: #ffd700; margin-top: 2px; display: block; }
 
         /* 带根 */
         .gen-select {
-            background: var(--confirm-bg);
+            background: rgba(255,215,0,0.1);
             border-radius: 8px;
             padding: 10px;
             margin-bottom: 10px;
         }
-        .gen-label { font-size: 12px; color: var(--highlight-color); margin-bottom: 8px; text-align: center; }
+        .gen-label { font-size: 12px; color: #ffd700; margin-bottom: 8px; text-align: center; }
         .gen-buttons { display: flex; gap: 6px; justify-content: center; }
         .gen-btn {
             padding: 8px 14px;
@@ -415,7 +268,7 @@
             font-size: 13px;
             cursor: pointer;
         }
-        .gen-btn.active { background: var(--highlight-color); color: #1a5f2a; border-color: var(--highlight-color); }
+        .gen-btn.active { background: #ffd700; color: #1a5f2a; border-color: #ffd700; }
 
         /* 微调 */
         .adjust-bar {
@@ -433,8 +286,8 @@
             font-size: 18px;
             cursor: pointer;
         }
-        .adjust-minus { background: var(--danger-color); color: #fff; }
-        .adjust-plus { background: var(--accent-color); color: #fff; }
+        .adjust-minus { background: #ff4444; color: #fff; }
+        .adjust-plus { background: #4CAF50; color: #fff; }
 
         /* 胡牌付钱人 */
         .payer-section {
@@ -444,7 +297,7 @@
         }
         .payer-title {
             font-size: 12px;
-            color: var(--danger-color);
+            color: #ff6b6b;
             margin-bottom: 10px;
             text-align: center;
         }
@@ -455,7 +308,7 @@
         }
         .payer-item {
             padding: 10px 4px;
-            background: var(--payer-bg);
+            background: rgba(255,68,68,0.15);
             border: 2px solid transparent;
             border-radius: 8px;
             color: #fff;
@@ -464,9 +317,9 @@
             text-align: center;
         }
         .payer-item:hover { background: rgba(255,68,68,0.25); }
-        .payer-item.selected { border-color: var(--danger-color); background: var(--payer-selected-bg); }
+        .payer-item.selected { border-color: #ff4444; background: rgba(255,68,68,0.35); }
         .payer-item:disabled { opacity: 0.3; cursor: not-allowed; }
-        .payer-item.self { opacity: 0.3; cursor: not-allowed; background: var(--card-bg); }
+        .payer-item.self { opacity: 0.3; cursor: not-allowed; background: rgba(255,255,255,0.1); }
 
         /* 杠牌区域 */
         .gang-section {
@@ -488,17 +341,17 @@
             justify-content: space-between;
             align-items: center;
             padding: 8px 10px;
-            background: var(--card-bg);
+            background: rgba(255,255,255,0.1);
             border-radius: 6px;
             margin-bottom: 6px;
         }
         .gang-item-info { font-size: 11px; }
-        .gang-item-score { color: var(--highlight-color); font-size: 11px; }
+        .gang-item-score { color: #ffd700; font-size: 11px; }
         .gang-item-delete {
             width: 22px;
             height: 22px;
             border-radius: 50%;
-            background: var(--danger-color);
+            background: #ff4444;
             border: none;
             color: #fff;
             cursor: pointer;
@@ -514,7 +367,7 @@
 
         /* 添加杠 */
         .add-gang-box {
-            background: var(--gang-bg);
+            background: rgba(255,107,107,0.1);
             border-radius: 8px;
             padding: 10px;
             border: 1px solid rgba(255,107,107,0.3);
@@ -527,7 +380,7 @@
         }
         .gang-type-btn {
             padding: 10px 4px;
-            background: var(--card-bg);
+            background: rgba(255,255,255,0.1);
             border: 2px solid transparent;
             border-radius: 6px;
             color: #fff;
@@ -535,14 +388,14 @@
             cursor: pointer;
             text-align: center;
         }
-        .gang-type-btn.selected { border-color: var(--danger-color); background: rgba(255,107,107,0.2); }
-        .gang-type-score { font-size: 9px; color: var(--danger-color); margin-top: 2px; display: block; }
+        .gang-type-btn.selected { border-color: #ff6b6b; background: rgba(255,107,107,0.2); }
+        .gang-type-score { font-size: 9px; color: #ff6b6b; margin-top: 2px; display: block; }
 
         .add-gang-action {
             width: 100%;
             padding: 10px;
             margin-top: 8px;
-            background: var(--accent-color);
+            background: #4CAF50;
             border: none;
             border-radius: 8px;
             color: #fff;
@@ -567,12 +420,12 @@
         }
         .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .nav-btn-prev { background: rgba(255,255,255,0.2); color: #fff; }
-        .nav-btn-next { background: var(--accent-color); color: #fff; }
-        .nav-btn-done { background: var(--highlight-color); color: #1a5f2a; font-weight: bold; }
+        .nav-btn-next { background: #4CAF50; color: #fff; }
+        .nav-btn-done { background: #ffd700; color: #1a5f2a; font-weight: bold; }
 
         /* === 步骤3: 确认提交 === */
         .confirm-section {
-            background: var(--confirm-bg);
+            background: rgba(255,215,0,0.1);
             border: 2px solid #ffd700;
             border-radius: 10px;
             padding: 15px;
@@ -581,11 +434,11 @@
         .confirm-title {
             text-align: center;
             font-size: 16px;
-            color: var(--highlight-color);
+            color: #ffd700;
             margin-bottom: 12px;
         }
         .confirm-player {
-            background: var(--nav-bg);
+            background: rgba(0,0,0,0.2);
             border-radius: 8px;
             padding: 10px;
             margin-bottom: 10px;
@@ -598,9 +451,9 @@
             font-size: 13px;
             font-weight: bold;
         }
-        .confirm-player-score { color: var(--highlight-color); }
-        .confirm-player-score.positive { color: var(--accent-color); }
-        .confirm-player-score.negative { color: var(--danger-color); }
+        .confirm-player-score { color: #ffd700; }
+        .confirm-player-score.positive { color: #4CAF50; }
+        .confirm-player-score.negative { color: #ff6b6b; }
         .confirm-detail {
             font-size: 11px;
             color: #aaa;
@@ -614,7 +467,7 @@
         .confirm-total {
             text-align: center;
             font-size: 14px;
-            color: var(--highlight-color);
+            color: #ffd700;
             margin-top: 15px;
             padding-top: 15px;
             border-top: 2px solid rgba(255,215,0,0.3);
@@ -629,7 +482,7 @@
         .bottom-btn {
             flex: 1;
             padding: 12px;
-            background: var(--card-bg);
+            background: rgba(255,255,255,0.1);
             border: none;
             border-radius: 10px;
             color: #fff;
@@ -640,7 +493,7 @@
         /* 历史记录 */
         .history-area {
             margin-top: 10px;
-            background: var(--nav-bg);
+            background: rgba(0,0,0,0.2);
             border-radius: 10px;
             padding: 10px;
             max-height: 150px;
@@ -661,7 +514,7 @@
             cursor: pointer;
         }
         .history-item:hover { background: rgba(255,255,255,0.05); }
-        .history-item:active { background: var(--card-bg); }
+        .history-item:active { background: rgba(255,255,255,0.1); }
         .history-item:last-child { border-bottom: none; }
 
         .hidden { display: none !important; }
@@ -670,16 +523,6 @@
 <body>
     <div class="header">
         <h1>🀄 四川麻将计分器</h1>
-        <div class="theme-selector">
-            <select id="theme-select" onchange="changeTheme(this.value)">
-                <option value="">🌿 经典绿</option>
-                <option value="fresh">💧 清新蓝</option>
-                <option value="cyber">⚡ 科技黑</option>
-                <option value="spring">🌸 春日粉</option>
-                <option value="midnight">🌙 暗夜紫</option>
-                <option value="sunset">🌅 暖阳橙</option>
-            </select>
-        </div>
     </div>
 
     <!-- 顶部玩家分数 -->
@@ -931,27 +774,8 @@
         const gangNames = { 'an': '暗杠', 'ming': '点杠', 'jia': '补杠' };
         const gangAmounts = { 'an': 2, 'ming': 2, 'jia': 1 };
 
-        // ==================== 主题切换 ====================
-        function changeTheme(theme) {
-            if (theme) {
-                document.body.setAttribute('data-theme', theme);
-            } else {
-                document.body.removeAttribute('data-theme');
-            }
-            localStorage.setItem('mahjong-theme', theme);
-        }
-
-        function loadTheme() {
-            const savedTheme = localStorage.getItem('mahjong-theme');
-            if (savedTheme) {
-                document.body.setAttribute('data-theme', savedTheme);
-                document.getElementById('theme-select').value = savedTheme;
-            }
-        }
-
         // ==================== 初始化 ====================
         function init() {
-            loadTheme();
             updatePlayerNames();
             renderSummaryGrid();
             bindHandTypeButtons();
